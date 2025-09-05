@@ -1,4 +1,5 @@
 {
+  "name": "book-library",
   "private": true,
   "workspaces": [
     "frontend",
