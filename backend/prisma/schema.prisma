@@ -13,14 +13,13 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String?
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   books     Book[]
-  bookmarks Bookmark[]
-  moods     Mood[]
 
   @@map("users")
 }
@@ -31,7 +30,7 @@ model Book {
   author      String
   genre       String?
   pages       Int?
-  isbn        String?  @unique
+  isbn        String?
   coverUrl    String?
   summary     String?
   publishedAt DateTime?
@@ -41,59 +40,8 @@ model Book {
   // Relations
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bookmarks   Bookmark[]
-  readingProgress ReadingProgress[]
 
   @@map("books")
 }
 
-model Bookmark {
-  id        String   @id @default(cuid())
-  page      Int?
-  note      String?
-  createdAt DateTime @default(now())
 
-  // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bookId    String
-  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-
-  @@map("bookmarks")
-}
-
-model ReadingProgress {
-  id          String   @id @default(cuid())
-  status      ReadingStatus @default(NOT_STARTED)
-  pagesRead   Int      @default(0)
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  bookId      String
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-
-  @@map("reading_progress")
-}
-
-model Mood {
-  id        String   @id @default(cuid())
-  mood      String   // e.g., "adventurous", "romantic", "mysterious"
-  intensity Int      @default(5) // 1-10 scale
-  createdAt DateTime @default(now())
-
-  // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("moods")
-}
-
-enum ReadingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  PAUSED
-}
