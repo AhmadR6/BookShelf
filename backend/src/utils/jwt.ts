@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 
-// Define User type locally to avoid Prisma client dependency issues
 interface User {
   id: string;
   email: string;
