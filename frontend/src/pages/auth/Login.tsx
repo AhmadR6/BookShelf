@@ -17,10 +17,15 @@ export default function LoginPage() {
     try {
       await loginMutation.mutateAsync({ email, password });
       navigate("/");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (err && typeof err === "object" && "response" in err) {
+        const apiError = err as { response?: { data?: { message?: string } } };
+        setError(
+          apiError.response?.data?.message || "Login failed. Please try again."
+        );
+      }
     }
   };
 

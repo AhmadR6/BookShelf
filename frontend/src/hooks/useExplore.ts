@@ -4,14 +4,13 @@ import {
   getBooksByCategory,
   getNewReleases,
 } from "../services/bookSearchApi";
-import type { BookSearchResult } from "../services/bookSearchApi";
 
 export const usePopularBooks = (maxResults: number = 20) => {
   return useQuery({
     queryKey: ["popularBooks", maxResults],
     queryFn: () => getPopularBooks(maxResults),
     staleTime: 1000 * 60 * 30, // 30 minutes
-    cacheTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60, // 1 hour (previously cacheTime)
   });
 };
 
@@ -24,7 +23,7 @@ export const useBooksByCategory = (
     queryFn: () => getBooksByCategory(category, maxResults),
     enabled: !!category,
     staleTime: 1000 * 60 * 30, // 30 minutes
-    cacheTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60, // 1 hour (previously cacheTime)
   });
 };
 
@@ -33,6 +32,8 @@ export const useNewReleases = (maxResults: number = 20) => {
     queryKey: ["newReleases", maxResults],
     queryFn: () => getNewReleases(maxResults),
     staleTime: 1000 * 60 * 30, // 30 minutes
-    cacheTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60, // 1 hour (previously cacheTime)
   });
 };
+
+

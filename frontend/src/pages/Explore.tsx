@@ -11,7 +11,6 @@ import Navbar from "../components/Navbar";
 import {
   Box,
   Typography,
-  Grid,
   Chip,
   Tabs,
   Tab,
@@ -28,7 +27,6 @@ interface TabPanelProps {
   index: number;
   value: number;
 }
-
 function TabPanel({ children, value, index, ...other }: TabPanelProps) {
   return (
     <div
@@ -81,7 +79,8 @@ const BookCard = ({
         bgcolor: "#1a1a1a",
         border: "1px solid #333",
         borderRadius: 1,
-        width: 280,
+        width: "100%",
+        maxWidth: 280,
         height: 380,
         display: "flex",
         flexDirection: "column",
@@ -260,14 +259,6 @@ export default function Explore() {
     }
   };
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="bg-black min-h-screen text-white">
@@ -296,7 +287,7 @@ export default function Explore() {
         <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
           <Tabs
             value={tabValue}
-            onChange={handleTabChange}
+            onChange={(_, v) => setTabValue(v)}
             sx={{
               "& .MuiTab-root": { color: "gray" },
               "& .Mui-selected": { color: "purple" },
@@ -313,6 +304,7 @@ export default function Explore() {
           </Tabs>
         </Box>
 
+        {/* Popular */}
         <TabPanel value={tabValue} index={0}>
           {popularLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -321,20 +313,27 @@ export default function Explore() {
           ) : popularError ? (
             <Alert severity="error">Failed to load popular books.</Alert>
           ) : (
-            <Grid container spacing={2}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                justifyContent: "center",
+              }}
+            >
               {popularBooks?.map((book) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={book.id}>
-                  <BookCard
-                    book={book}
-                    onAdd={() => handleAddToLibrary(book)}
-                    disabled={createBookMutation.isPending}
-                  />
-                </Grid>
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onAdd={() => handleAddToLibrary(book)}
+                  disabled={createBookMutation.isPending}
+                />
               ))}
-            </Grid>
+            </Box>
           )}
         </TabPanel>
 
+        {/* New Releases */}
         <TabPanel value={tabValue} index={1}>
           {newReleasesLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -343,20 +342,27 @@ export default function Explore() {
           ) : newReleasesError ? (
             <Alert severity="error">Failed to load new releases.</Alert>
           ) : (
-            <Grid container spacing={2}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                justifyContent: "center",
+              }}
+            >
               {newReleases?.map((book) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={book.id}>
-                  <BookCard
-                    book={book}
-                    onAdd={() => handleAddToLibrary(book)}
-                    disabled={createBookMutation.isPending}
-                  />
-                </Grid>
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onAdd={() => handleAddToLibrary(book)}
+                  disabled={createBookMutation.isPending}
+                />
               ))}
-            </Grid>
+            </Box>
           )}
         </TabPanel>
 
+        {/* Categories */}
         <TabPanel value={tabValue} index={2}>
           <Box sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 1 }}>
             {categories.map((cat) => (
@@ -384,17 +390,23 @@ export default function Explore() {
               Failed to load books for this category.
             </Alert>
           ) : (
-            <Grid container spacing={2}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                justifyContent: "center",
+              }}
+            >
               {categoryBooks?.map((book) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={book.id}>
-                  <BookCard
-                    book={book}
-                    onAdd={() => handleAddToLibrary(book)}
-                    disabled={createBookMutation.isPending}
-                  />
-                </Grid>
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onAdd={() => handleAddToLibrary(book)}
+                  disabled={createBookMutation.isPending}
+                />
               ))}
-            </Grid>
+            </Box>
           )}
         </TabPanel>
       </Box>
@@ -402,7 +414,7 @@ export default function Explore() {
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
-        onClose={handleSnackbarClose}
+        onClose={() => setSnackbarOpen(false)}
         message={snackbarMessage}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
