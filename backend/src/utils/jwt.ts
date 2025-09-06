@@ -1,5 +1,10 @@
 import jwt from "jsonwebtoken";
-import type { User } from "@prisma/client";
+
+// Define User type locally to avoid Prisma client dependency issues
+interface User {
+  id: string;
+  email: string;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-here";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
