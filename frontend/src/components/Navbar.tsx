@@ -12,8 +12,8 @@ export default function Navbar() {
     <>
       <nav className="flex items-center justify-between px-4 md:px-6 py-3 bg-black text-white relative">
         {/* Logo Section */}
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold">📖</span>
+        <div className="flex items-center justify-center gap-2">
+          <img src="/book.png" className="w-5 h-5" />
           <Link to="/" className="font-semibold text-lg">
             BookShelf
           </Link>
