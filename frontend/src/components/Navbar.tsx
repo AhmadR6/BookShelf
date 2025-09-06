@@ -5,10 +5,8 @@ import { useState } from "react";
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
   return (
     <>
@@ -31,13 +29,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Search and Auth */}
+        {/* Desktop Auth */}
         <div className="hidden lg:flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search books, authors..."
-            className="bg-gray-800 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-64"
-          />
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-300 truncate max-w-32">
@@ -70,27 +63,6 @@ export default function Navbar() {
 
         {/* Mobile Controls */}
         <div className="flex items-center gap-2 lg:hidden">
-          {/* Search Toggle Button */}
-          <button
-            onClick={toggleSearch}
-            className="p-2 hover:bg-gray-800 rounded transition-colors"
-            aria-label="Toggle search"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </button>
-
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
@@ -122,18 +94,6 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
-
-      {/* Mobile Search Bar */}
-      {isSearchOpen && (
-        <div className="lg:hidden bg-gray-900 px-4 py-3 border-b border-gray-700">
-          <input
-            type="text"
-            placeholder="Search books, authors..."
-            className="w-full bg-gray-800 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-            autoFocus
-          />
-        </div>
-      )}
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (

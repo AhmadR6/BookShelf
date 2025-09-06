@@ -1,8 +1,28 @@
 import { useBooks } from "../hooks/useBooks";
 import BookCard from "./BookCard";
+import type { Book } from "../types";
 
-export default function BookGrid() {
-  const { data: books, isLoading, error } = useBooks();
+interface BookGridProps {
+  books?: Book[];
+  isLoading?: boolean;
+  error?: Error | null;
+}
+
+export default function BookGrid({
+  books: propBooks,
+  isLoading: propIsLoading,
+  error: propError,
+}: BookGridProps) {
+  const {
+    data: hookBooks,
+    isLoading: hookIsLoading,
+    error: hookError,
+  } = useBooks();
+
+  // Use props if provided, otherwise use hook data
+  const books = propBooks ?? hookBooks;
+  const isLoading = propIsLoading ?? hookIsLoading;
+  const error = propError ?? hookError;
 
   if (isLoading) {
     return (

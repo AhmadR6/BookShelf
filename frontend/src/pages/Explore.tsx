@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuthContext";
 import { useCreateBook } from "../hooks/useBooks";
+import { useSearch } from "../hooks/useSearch";
 import {
   usePopularBooks,
   useNewReleases,
@@ -210,6 +211,7 @@ const BookCard = ({
 
 export default function Explore() {
   const { isAuthenticated } = useAuth();
+  const { searchResults, isSearching, searchError } = useSearch();
   const [tabValue, setTabValue] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("Fiction");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -301,6 +303,13 @@ export default function Explore() {
               iconPosition="start"
             />
             <Tab icon={<Category />} label="Categories" iconPosition="start" />
+            {searchResults.length > 0 && (
+              <Tab
+                icon={<span>🔍</span>}
+                label={`Search (${searchResults.length})`}
+                iconPosition="start"
+              />
+            )}
           </Tabs>
         </Box>
 
@@ -409,6 +418,37 @@ export default function Explore() {
             </Box>
           )}
         </TabPanel>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <TabPanel value={tabValue} index={3}>
+            {isSearching ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : searchError ? (
+              <Alert severity="error">Search failed. Please try again.</Alert>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  justifyContent: "center",
+                }}
+              >
+                {searchResults.map((book) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    onAdd={() => handleAddToLibrary(book)}
+                    disabled={createBookMutation.isPending}
+                  />
+                ))}
+              </Box>
+            )}
+          </TabPanel>
+        )}
       </Box>
 
       <Snackbar
