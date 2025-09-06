@@ -6,8 +6,17 @@ import {
   Button,
   List,
   ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { useState } from "react";
+import { useBookSearch } from "../../hooks/useBookSearch";
+import { useCreateBook } from "../../hooks/useBooks";
+import { getBestCoverImage, getISBN } from "../../services/bookSearchApi";
+import type { BookSearchResult } from "../../services/bookSearchApi";
 
 interface Props {
   open: boolean;
@@ -16,11 +25,36 @@ interface Props {
 
 export default function SearchBookModal({ open, onClose }: Props) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<string[]>([]);
+  const { searchResults, search, isSearching, searchError, clearResults } =
+    useBookSearch();
+  const createBookMutation = useCreateBook();
 
   const handleSearch = () => {
-    // TODO: Replace with API call
-    setResults(["The Great Gatsby", "To Kill a Mockingbird", "1984"]);
+    if (query.trim()) {
+      search(query.trim());
+    }
+  };
+
+  const handleSelectBook = async (book: BookSearchResult) => {
+    try {
+      const bookData = {
+        title: book.title,
+        author: book.authors?.join(", ") || "Unknown Author",
+        genre: book.categories?.[0] || undefined,
+        pages: book.pageCount || undefined,
+        isbn: getISBN(book.industryIdentifiers) || undefined,
+        coverUrl: getBestCoverImage(book.imageLinks) || undefined,
+        summary: book.description || undefined,
+        publishedAt: book.publishedDate || undefined,
+      };
+
+      await createBookMutation.mutateAsync(bookData);
+      onClose();
+      setQuery("");
+      clearResults();
+    } catch (error) {
+      console.error("Failed to add book:", error);
+    }
   };
 
   return (
@@ -56,26 +90,96 @@ export default function SearchBookModal({ open, onClose }: Props) {
         <Button
           onClick={handleSearch}
           variant="contained"
-          sx={{ bgcolor: "red", "&:hover": { bgcolor: "darkred" } }}
+          disabled={isSearching || !query.trim()}
+          sx={{
+            bgcolor: "purple",
+            "&:hover": { bgcolor: "darkpurple" },
+            "&:disabled": { bgcolor: "gray" },
+          }}
         >
-          Search
+          {isSearching ? <CircularProgress size={20} /> : "Search"}
         </Button>
 
-        <List>
-          {results.map((r, i) => (
+        {searchError && (
+          <Alert severity="error" sx={{ bgcolor: "rgba(244, 67, 54, 0.1)" }}>
+            {searchError.message}
+          </Alert>
+        )}
+
+        {searchResults.length > 0 && (
+          <Typography variant="subtitle2" color="gray">
+            Found {searchResults.length} results
+          </Typography>
+        )}
+
+        <List sx={{ maxHeight: 400, overflow: "auto" }}>
+          {searchResults.map((book) => (
             <ListItem
-              key={i}
+              key={book.id}
               sx={{
                 borderBottom: "1px solid #333",
                 cursor: "pointer",
                 "&:hover": { bgcolor: "#2a2a2a" },
+                flexDirection: "column",
+                alignItems: "flex-start",
+                py: 2,
               }}
-              onClick={() => {
-                console.log("Selected:", r);
-                onClose();
-              }}
+              onClick={() => handleSelectBook(book)}
             >
-              {r}
+              <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
+                <ListItemAvatar>
+                  <Avatar
+                    src={getBestCoverImage(book.imageLinks) || undefined}
+                    variant="rounded"
+                    sx={{ width: 60, height: 80 }}
+                  >
+                    📖
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {book.title}
+                    </Typography>
+                  }
+                  secondary={
+                    <Box>
+                      <Typography variant="body2" color="gray">
+                        by {book.authors?.join(", ") || "Unknown Author"}
+                      </Typography>
+                      {book.publishedDate && (
+                        <Typography variant="caption" color="gray">
+                          Published: {book.publishedDate}
+                        </Typography>
+                      )}
+                      {book.pageCount && (
+                        <Typography
+                          variant="caption"
+                          color="gray"
+                          sx={{ ml: 1 }}
+                        >
+                          {book.pageCount} pages
+                        </Typography>
+                      )}
+                      {book.description && (
+                        <Typography
+                          variant="body2"
+                          color="gray"
+                          sx={{
+                            mt: 1,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {book.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
+                />
+              </Box>
             </ListItem>
           ))}
         </List>

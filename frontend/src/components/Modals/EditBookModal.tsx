@@ -7,24 +7,29 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
-import React, { useState } from "react";
-import { useCreateBook } from "../../hooks/useBooks";
+import React, { useState, useEffect } from "react";
+import { useUpdateBook } from "../../hooks/useBooks";
 import { useBookSearch } from "../../hooks/useBookSearch";
 import {
   getBestCoverImage,
   getISBN,
   searchBooks,
 } from "../../services/bookSearchApi";
-import type { CreateBookRequest } from "../../types";
+import type { CreateBookRequest, Book } from "../../types";
 import type { BookSearchResult } from "../../services/bookSearchApi";
 
-interface AddBookModalProps {
+interface EditBookModalProps {
   open: boolean;
   onClose: () => void;
+  book: Book;
 }
 
-export default function AddBookModal({ open, onClose }: AddBookModalProps) {
-  const [book, setBook] = useState({
+export default function EditBookModal({
+  open,
+  onClose,
+  book,
+}: EditBookModalProps) {
+  const [formData, setFormData] = useState({
     title: "",
     author: "",
     isbn: "",
@@ -35,18 +40,42 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
     coverUrl: "",
   });
   const [error, setError] = useState("");
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const [isAutoSearching, setIsAutoSearching] = useState(false);
 
-  const createBookMutation = useCreateBook();
-  const { searchResults, clearResults } = useBookSearch();
+  const updateBookMutation = useUpdateBook();
+  const { searchResults, search, isSearching, clearResults } = useBookSearch();
+
+  // Initialize form data when book changes
+  useEffect(() => {
+    if (book) {
+      setFormData({
+        title: book.title,
+        author: book.author,
+        isbn: book.isbn || "",
+        year: book.publishedAt
+          ? new Date(book.publishedAt).getFullYear().toString()
+          : "",
+        genre: book.genre || "",
+        description: book.summary || "",
+        pages: book.pages?.toString() || "",
+        coverUrl: book.coverUrl || "",
+      });
+    }
+  }, [book]);
 
   const handleChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      setBook({ ...book, [field]: e.target.value });
+      setFormData({ ...formData, [field]: e.target.value });
+
+  const handleSearchBook = () => {
+    if (formData.title.trim() || formData.author.trim()) {
+      const query = `${formData.title} ${formData.author}`.trim();
+      search(query);
+    }
+  };
 
   const handleSelectSearchResult = (searchBook: BookSearchResult) => {
-    setBook({
+    setFormData({
       title: searchBook.title,
       author: searchBook.authors?.join(", ") || "",
       isbn: getISBN(searchBook.industryIdentifiers) || "",
@@ -56,12 +85,11 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
       pages: searchBook.pageCount?.toString() || "",
       coverUrl: getBestCoverImage(searchBook.imageLinks) || "",
     });
-    setShowSearchResults(false);
     clearResults();
   };
 
   const handleSubmit = async () => {
-    if (!book.title || !book.author) {
+    if (!formData.title || !formData.author) {
       setError("Title and author are required");
       return;
     }
@@ -71,17 +99,20 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
     try {
       // Check if we need to search for missing information
       const needsSearch =
-        !book.coverUrl || !book.isbn || !book.pages || !book.description;
+        !formData.coverUrl ||
+        !formData.isbn ||
+        !formData.pages ||
+        !formData.description;
 
       const baseBookData: CreateBookRequest = {
-        title: book.title,
-        author: book.author,
-        isbn: book.isbn || undefined,
-        genre: book.genre || undefined,
-        summary: book.description || undefined,
-        coverUrl: book.coverUrl || undefined,
-        pages: book.pages ? parseInt(book.pages) : undefined,
-        publishedAt: book.year ? `${book.year}-01-01` : undefined,
+        title: formData.title,
+        author: formData.author,
+        isbn: formData.isbn || undefined,
+        genre: formData.genre || undefined,
+        summary: formData.description || undefined,
+        coverUrl: formData.coverUrl || undefined,
+        pages: formData.pages ? parseInt(formData.pages) : undefined,
+        publishedAt: formData.year ? `${formData.year}-01-01` : undefined,
       };
 
       let finalBookData = { ...baseBookData };
@@ -91,7 +122,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         setIsAutoSearching(true);
         try {
           const searchResults = await searchBooks(
-            `${book.title} ${book.author}`,
+            `${formData.title} ${formData.author}`,
             1
           );
           if (searchResults.length > 0) {
@@ -130,24 +161,17 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         }
       }
 
-      await createBookMutation.mutateAsync(finalBookData);
-      setBook({
-        title: "",
-        author: "",
-        isbn: "",
-        year: "",
-        genre: "",
-        description: "",
-        pages: "",
-        coverUrl: "",
+      await updateBookMutation.mutateAsync({
+        id: book.id,
+        ...finalBookData,
       });
       onClose();
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error && "response" in err
           ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message || "Failed to add book"
-          : "Failed to add book";
+              ?.data?.message || "Failed to update book"
+          : "Failed to update book";
       setError(errorMessage);
     }
   };
@@ -156,26 +180,24 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
     <Modal open={open} onClose={onClose}>
       <Box
         sx={{
-          width: 400,
+          width: 500,
           bgcolor: "#1c1c1f",
           color: "white",
           p: 4,
           borderRadius: 2,
           boxShadow: 24,
           mx: "auto",
-          mt: "10%",
+          mt: "5%",
           display: "flex",
           flexDirection: "column",
           gap: 2,
+          maxHeight: "90vh",
+          overflow: "auto",
         }}
       >
         <Typography variant="h6" fontWeight="bold">
-          Add Book Manually
+          Edit Book
         </Typography>
-        {/* <Typography variant="caption" color="gray" sx={{ mb: 1 }}>
-          💡 Tip: If you leave fields empty, we'll automatically search for
-          missing details like cover image, ISBN, and description!
-        </Typography> */}
 
         {error && (
           <Alert severity="error" sx={{ bgcolor: "rgba(244, 67, 54, 0.1)" }}>
@@ -186,7 +208,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           label="Title"
           placeholder="e.g., The Great Gatsby"
-          value={book.title}
+          value={formData.title}
           onChange={handleChange("title")}
           fullWidth
           size="small"
@@ -195,17 +217,19 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           label="Author"
           placeholder="e.g., F. Scott Fitzgerald"
-          value={book.author}
+          value={formData.author}
           onChange={handleChange("author")}
           fullWidth
           size="small"
           sx={{ input: { color: "white" }, label: { color: "gray" } }}
         />
 
-        {/* <Button
+        <Button
           onClick={handleSearchBook}
           variant="outlined"
-          disabled={isSearching || (!book.title.trim() && !book.author.trim())}
+          disabled={
+            isSearching || (!formData.title.trim() && !formData.author.trim())
+          }
           sx={{
             borderColor: "purple",
             color: "purple",
@@ -215,12 +239,13 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
             },
           }}
         >
-          {isSearching ? "Searching..." : "🔍 Search for Book Details"}
-        </Button> */}
+          {isSearching ? "Searching..." : "🔍 Search for Updated Details"}
+        </Button>
+
         <TextField
           label="ISBN"
           placeholder="e.g., 9780743273565"
-          value={book.isbn}
+          value={formData.isbn}
           onChange={handleChange("isbn")}
           fullWidth
           size="small"
@@ -229,7 +254,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           label="Publication Year"
           placeholder="e.g., 1925"
-          value={book.year}
+          value={formData.year}
           onChange={handleChange("year")}
           fullWidth
           size="small"
@@ -238,7 +263,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           label="Pages"
           placeholder="e.g., 180"
-          value={book.pages}
+          value={formData.pages}
           onChange={handleChange("pages")}
           fullWidth
           size="small"
@@ -247,7 +272,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           label="Cover URL"
           placeholder="e.g., https://example.com/cover.jpg"
-          value={book.coverUrl}
+          value={formData.coverUrl}
           onChange={handleChange("coverUrl")}
           fullWidth
           size="small"
@@ -256,7 +281,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <TextField
           select
           label="Genre"
-          value={book.genre}
+          value={formData.genre}
           onChange={handleChange("genre")}
           fullWidth
           size="small"
@@ -283,7 +308,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
           placeholder="A brief summary..."
           multiline
           rows={3}
-          value={book.description}
+          value={formData.description}
           onChange={handleChange("description")}
           fullWidth
           size="small"
@@ -293,7 +318,7 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={createBookMutation.isPending || isAutoSearching}
+          disabled={updateBookMutation.isPending || isAutoSearching}
           sx={{
             mt: 1,
             bgcolor: "purple",
@@ -302,13 +327,13 @@ export default function AddBookModal({ open, onClose }: AddBookModalProps) {
           }}
         >
           {isAutoSearching
-            ? "🔍 Finding book details..."
-            : createBookMutation.isPending
-            ? "Adding Book..."
-            : "Add Book"}
+            ? "🔍 Finding updated details..."
+            : updateBookMutation.isPending
+            ? "Updating Book..."
+            : "Update Book"}
         </Button>
 
-        {showSearchResults && searchResults.length > 0 && (
+        {searchResults.length > 0 && (
           <Box sx={{ mt: 2, maxHeight: 200, overflow: "auto" }}>
             <Typography variant="subtitle2" color="gray" sx={{ mb: 1 }}>
               Search Results - Click to auto-fill:

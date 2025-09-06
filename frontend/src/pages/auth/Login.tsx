@@ -1,14 +1,27 @@
 "use client";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLogin } from "../../hooks/useAuth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const loginMutation = useLogin();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add login logic
-    console.log({ email, password });
+    setError("");
+
+    try {
+      await loginMutation.mutateAsync({ email, password });
+      navigate("/");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
+    }
   };
 
   return (
@@ -21,6 +34,12 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
+          {error && (
+            <div className="bg-red-500/20 border border-red-500 text-red-400 p-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <input
             className="bg-[#1c1c1f] border border-gray-700 p-3 rounded-lg w-full placeholder-gray-400 focus:outline-none focus:border-purple-500"
             placeholder="Email address"
@@ -28,6 +47,7 @@ export default function LoginPage() {
             type="email"
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loginMutation.isPending}
           />
           <input
             className="bg-[#1c1c1f] border border-gray-700 p-3 rounded-lg w-full placeholder-gray-400 focus:outline-none focus:border-purple-500"
@@ -36,6 +56,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loginMutation.isPending}
           />
 
           <a
@@ -47,9 +68,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="bg-purple-600 hover:bg-purple-700 text-white w-full font-semibold p-3 rounded-lg transition-colors"
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-not-allowed text-white w-full font-semibold p-3 rounded-lg transition-colors"
+            disabled={loginMutation.isPending}
           >
-            Sign In
+            {loginMutation.isPending ? "Signing In..." : "Sign In"}
           </button>
         </form>
 

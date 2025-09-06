@@ -1,15 +1,28 @@
 "use client";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useRegister } from "../../hooks/useAuth";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const registerMutation = useRegister();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: hook up API call
-    console.log({ name, email, password });
+    setError("");
+
+    try {
+      await registerMutation.mutateAsync({ name, email, password });
+      navigate("/");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
+    }
   };
 
   return (
@@ -25,12 +38,19 @@ export default function SignupPage() {
 
         {/* Form */}
         <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
+          {error && (
+            <div className="bg-red-500/20 border border-red-500 text-red-400 p-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <input
             type="text"
             placeholder="Full name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            disabled={registerMutation.isPending}
             className="bg-[#1c1c1f] border border-gray-700 p-3 rounded-lg w-full placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
           <input
@@ -39,6 +59,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={registerMutation.isPending}
             className="bg-[#1c1c1f] border border-gray-700 p-3 rounded-lg w-full placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
           <input
@@ -47,14 +68,16 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={registerMutation.isPending}
             className="bg-[#1c1c1f] border border-gray-700 p-3 rounded-lg w-full placeholder-gray-400 focus:outline-none focus:border-purple-500"
           />
 
           <button
             type="submit"
-            className="bg-purple-600 hover:bg-purple-700 text-white w-full font-semibold p-3 rounded-lg transition-colors"
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-not-allowed text-white w-full font-semibold p-3 rounded-lg transition-colors"
+            disabled={registerMutation.isPending}
           >
-            Sign Up
+            {registerMutation.isPending ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 
