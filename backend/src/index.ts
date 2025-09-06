@@ -15,7 +15,14 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(morgan("combined"));
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL
+        : "http://localhost:5173",
+  })
+);
 app.use(express.json());
 
 // Health check endpoint
@@ -35,7 +42,11 @@ app.use("/api/books", bookRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend listening on ${PORT}`));
+export default app;
 
-module.exports = app;
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Backend listening on ${PORT}`);
+  });
+}
