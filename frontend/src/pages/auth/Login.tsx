@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogin } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -64,12 +65,12 @@ export default function LoginPage() {
             disabled={loginMutation.isPending}
           />
 
-          <a
-            href="/forgot-password"
+          <Link
+            to="/forgot-password"
             className="self-end text-gray-400 text-sm hover:text-white transition-colors"
           >
             Forgot Password?
-          </a>
+          </Link>
 
           <button
             type="submit"
@@ -82,9 +83,9 @@ export default function LoginPage() {
 
         <p className="text-gray-400 text-sm">
           Don&apos;t have an account?
-          <a href="/signup" className="text-purple-400 hover:underline ml-1">
+          <Link to="/signup" className="text-purple-400 hover:underline ml-1">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </main>

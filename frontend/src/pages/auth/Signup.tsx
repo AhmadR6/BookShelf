@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRegister } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -90,9 +91,9 @@ export default function SignupPage() {
         {/* Link to login */}
         <p className="text-gray-400 text-sm">
           Already have an account?
-          <a href="/login" className="text-purple-400 hover:underline ml-1">
+          <Link to="/login" className="text-purple-400 hover:underline ml-1">
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </main>
