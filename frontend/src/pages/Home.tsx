@@ -6,6 +6,7 @@ import Filters from "../components/Filters";
 import BookGrid from "../components/BookGrid";
 import AddBookMenu from "../components/AddBookMenu";
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -83,12 +84,12 @@ export default function Home() {
             <p className="text-gray-400 text-lg mb-8">
               Please log in to view your library
             </p>
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Get Started
-            </a>
+            </Link>
           </div>
         </div>
       </div>
